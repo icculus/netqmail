@@ -86,6 +86,7 @@ void err_nogateway()
 #endif
 void err_unimpl(arg) char *arg; { out("502 unimplemented (#5.5.1)\r\n"); }
 void err_syntax() { out("555 syntax error (#5.5.4)\r\n"); }
+void err_relay() { out("553 we don't relay (#5.7.1)\r\n"); }
 void err_wantmail() { out("503 MAIL first (#5.5.1)\r\n"); }
 void err_wantrcpt() { out("503 RCPT first (#5.5.1)\r\n"); }
 void err_noop(arg) char *arg; { out("250 ok\r\n"); }
@@ -269,6 +270,21 @@ int addrallowed()
   return r;
 }
 
+int addrrelay()
+{
+  int j;
+  j = addr.len;
+  while(--j >= 0)
+    if (addr.s[j] == '@') break;
+  if (j < 0) j = addr.len;
+  while(--j >= 0) {
+    if (addr.s[j] == '@') return 1;
+    if (addr.s[j] == '%') return 1;
+    if (addr.s[j] == '!') return 1;
+  }
+  return 0;
+}
+
 
 int seenmail = 0;
 int flagbarf; /* defined if seenmail */
@@ -391,6 +407,7 @@ void smtp_mail(arg) char *arg;
 void smtp_rcpt(arg) char *arg; {
   if (!seenmail) { err_wantmail(); return; }
   if (!addrparse(arg)) { err_syntax(); return; }
+  if (addrrelay()) { err_relay(); return; }
   if (flagbarf) { err_bmf(); return; }
   if (!relayclient) allowed = addrallowed();
   else allowed = 1;
