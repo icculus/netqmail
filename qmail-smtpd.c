@@ -85,6 +85,7 @@ void err_nogateway()
 }
 #endif
 void err_unimpl(arg) char *arg; { out("502 unimplemented (#5.5.1)\r\n"); }
+void err_unrecog() { out("500 unrecognised (#5.5.2)\r\n"); }
 void err_syntax() { out("555 syntax error (#5.5.4)\r\n"); }
 void err_relay() { out("553 we don't relay (#5.7.1)\r\n"); }
 void err_wantmail() { out("503 MAIL first (#5.5.1)\r\n"); }
@@ -1040,7 +1041,7 @@ struct commands smtpcommands[] = {
 #endif
 , { "noop", err_noop, flush }
 , { "vrfy", err_vrfy, flush }
-, { 0, err_unimpl, flush }
+, { 0, err_unrecog, flush }
 } ;
 
 void main(argc,argv)
