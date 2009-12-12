@@ -538,7 +538,10 @@ void smtp()
   if (!smtps)
 #endif
  
-  if (smtpcode() != 220) quit("ZConnected to "," but greeting failed");
+  code = smtpcode();
+  if (code >= 500 && code < 600) quit("DConnected to "," but greeting failed");
+  if (code >= 400 && code < 500) return; /* try next MX, see RFC-2821 */
+  if (code != 220) quit("ZConnected to "," but greeting failed");
  
 #ifdef EHLO
 # ifdef TLS
@@ -761,7 +764,7 @@ char **argv;
 #ifdef TLS
       partner_fqdn = ip.ix[i].fqdn;
 #endif
-      smtp(); /* does not return */
+      smtp(); /* only returns when the next MX is to be tried */
     }
     tcpto_err(&ip.ix[i].ip,errno == error_timeout);
     close(smtpfd);
