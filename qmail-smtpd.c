@@ -28,7 +28,7 @@
 
 int spp_val;
 
-#define CRAM_MD5
+/*#define CRAM_MD5*/
 #define AUTHSLEEP 5
 
 #define MAXHOPS 100
