@@ -149,6 +149,14 @@ but communication failed.
 .B 81
 Internal bug; e.g., segmentation fault.
 .TP
+.B 82
+Custom error (=bounce) messages. You have to write the error message to fd 4
+and exit 82, in order to use the custom message. Format of the message:
+
+Dthis is a custom fatal error message
+
+Zthis is a custom temporary failure message
+.TP
 .B 91
 Envelope format error.
 .SH "SEE ALSO"
