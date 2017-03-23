@@ -1,0 +1,48 @@
+<html>
+<body>
+<h1>The dktest program</h1>
+
+<p><tt>dktest</tt> exercises the domainkeys library.</p>
+
+<h2>Interface</h2>
+<pre>
+     dktest <i>opts</i>
+</pre>
+<p><tt><i>opts</i></tt> is a series of getopt-style options.</p>
+<p>Both signing and verification merely print out the DK header.  They do
+not keep a copy of the input file.  You will need to do something like this:</p>
+
+<pre>
+(./dktest -s /etc/domainkeys/dog &lt;/tmp/testmsg; cat /tmp/testmsg) | ./dktest -v
+</pre>
+
+<p>Here are the options:
+<ul>
+
+<li><tt>-s <i>key</i></tt>: Sign.  <tt><i>key</i></tt> is a path to a
+file containing a PEM-format private key.  The base name of the file
+is used as the selector.  Reads the email message on stdin.  Prints
+the DomainKey-Signature header.
+
+<li><tt>-v</tt>: Verify.  Verifies the email on stdin.  Exits with a
+non-zero exit code and a message to stderr if there was a problem with
+the signature.  Always prints a DomainKey-Status: header to stdout.
+
+<li><tt>-c [simple|nofws]</tt>: Canonicalization.  Defaults to <tt>simple</tt>.
+
+<li><tt>-t <i>n</i></tt>: Test.  <tt><i>n</i></tt> is a number
+indicating which internal test is being performed.  The meanings of
+the numbers are documented in the source code.
+
+<li><tt>-b <i>n</i></tt>: Buffer size.  <tt><i>n</i></tt> is a
+number which forces the buffer size.  Only needed for testing.
+
+<li><tt>-h</tt>: include h= tag when signing.
+  
+<li><tt>-r</tt>: only include unique headers in the signature generation, implies -h
+
+<li><tt>-T</tt>: Generate DomainKey-Trace: header, shows Diff header if Verifying.
+
+</ul>
+</body>
+</html>

@@ -1,0 +1,20 @@
+Comment: DomainKeys? See http://antispam.yahoo.com/domainkeys
+DomainKey-Signature: a=rsa-sha1; q=dns; c=simple;
+  s=dog; d=crynwr.com;
+  b=rWimc4O3yEZJ5eW2WDt3KjexcPoOQdEzkszq028JFNk4JEUvlNQj5+CUBoxKgi+S;
+Sender: nelson@crynwr.com
+Return-Path: <nelson@crynwr.com>
+Date: 22 Apr 2004 14:24:09 -0000
+Message-ID: <20040422142409.17337.qmail@desk.crynwr.com>
+From: foo@example.com
+To: nelson@crynwr.com
+Subject: test message
+X-Mailer: VM 7.07 under 21.4 (patch 8) "Honest Recruiter" XEmacs Lucid
+
+This is a test mesage.
+
+-- 
+--My blog is at angry-economist.russnelson.com  | Spinach ala mode -- a good
+Crynwr sells support for free software  | PGPok | way to eat spinach?  Or a
+521 Pleasant Valley Rd. | +1 315 268 1925 voice | bad way to eat ice cream?
+Potsdam, NY 13676-3213  | FWD# 404529 via VOIP  | 

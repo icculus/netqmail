@@ -1,0 +1,173 @@
+Changed from 0.68 to 0.69:
+	API:
+	o Added dk_granularity() to retrieve the value of (g=) tag in DNS lookup (called after dk_end)
+	o Added DK_STAT_GRANULARITY status enumeration
+	o Fixed dktest.c to check for DK_STAT_GRANULARITY
+	
+	Internal:
+	o Fixed dk_headers() to always return the proper length of a null terminated header list, even with a NULL argument and
+		RDUPE on
+	o Added dk->granularity pointer to DK struct
+	o Python wrapper updates
+	o Updated Documentation and test script
+	o Fixed bug with policy:
+		Consider a message with both a Sender: and a From: header, but no DK signature.
+	
+Changed from 0.67 to 0.68:
+
+  API:
+    o Added dk_settxt() to bypass dns lookups and set query responses manually
+    o Added dk_domain() to return the domain name used (dk->domain)
+    o Added python wrapper (domainkeys_wrap.c) (use make python to make shared object to import)
+
+  Internal:
+
+Changed from 0.66 to 0.67:
+
+  API:
+  o Incompatible changes made: dk_free requires an additional parameter, used to specify the OpenSSL Error State should be cleared
+  o Added dk_setopts() and dk_getopts()
+  o Deprecated dk_enable_trace() and dk_remdupe() in favor of using dk_setopts()
+  o Added dk_shutdown() to be used at application shutdown (frees dklib and openssl memory when done)
+
+  Internal:
+  o Clarified documented behavior for dk_end()/dk_policy() and flag retrieval
+  o Performance improvments (see source for DK_HASH_BUFF)
+  o Fixed dkt_generate to remove the last ':' char and report accurate length of string returned
+  o Fixed memory leak in dk_headers()
+  o Added dk_init() Documentation update (Safe Multi-Thread Usage)
+
+Changed from 0.65 to 0.66:
+
+  API:
+  o No incompatible changes made.
+  o Added dk_compare_trace(), dk_enable_trace() and dk_get_trace()
+  o Added -T option to dktest to enable generation of trace headers
+
+  Internal:
+  o Added test to dk_message() to detect stray CRs
+  o Fixed parent domain handling
+
+Changes from 0.64 to 0.65:
+  API:
+  o No incompatible changes made.
+  o Added dk_remdupe() to turn on/off ignoring hashing in duplicate headers when signing
+  o Added dk_selector() to return the selector name used or NULL if there isn't one
+  o Added -h option to dktest to add h= tag when signing
+  o Added -r option to dktest to enable ignoring duplicate headers when signing (implies -h)
+
+  Internal:
+  o Win32 and Unixware compatability
+  o dk_headers() now reports accurate length of h= list and preserves duplicate headers
+  o Fixed dkheaders_header() to properly handle h= tags when verifying, handles duplicate headers properly
+  o Fixed simple canon, no longer unfolds headers when in simple canon
+  o Fixed nofws canon when an embedded \r is in the body of a message
+  o Fixed dk_from() to properly report the senders domain when the message is not signed
+  o Fixed dk_from() to properly return NULL when the sender address is malformed (ie: @host, user@, @, <empty>)
+  o Added check in dkheaders() to check dk_from() after parsing headers to make sure there is a valid sender address
+  o Fixed dk_policy() to use dk_from(), not value in dk->from
+  o Fixed handling of messages when verifying and more than one DK-Sig header is found, now uses the first DK-Sig found properly
+  o Fixed handling of messages when signing and there is an existing DK-Sig (Sender: before DK-Sig), pre-existing DK-Sig is ignored
+
+Changes from 0.63 to 0.64:
+
+  API:
+  o No incompatible changes made.
+  o Added dk_headers().
+  o Added DK_FLAG_G, which reports that g= was present.
+  o Added dk_address().
+  o Deprecated dk_from().
+  o Added dk_end() (like dk_eom only it doesn't call dk_policy()).
+  o Added dk_policy().
+  o Deprecated dk_eom() in favor of calling dk_end and dk_policy.
+
+  Internal:
+  o dns_txt replaced by dns_text (internal-only change).
+  o dns_text now always returns a malloc'ed string.
+  o Added copyright and license.
+  o Added DK_MALLOC(), DK_MFREE(), and dk_strdup.  They use openssl's.
+  o Changed dkparse822() to make an address for dk_address(), which see.
+  o Fixed a bug in dknewkey where it inserted an extra quote char.
+  o Fixed a memory leak in dk_free().  Thanks Robert Powers.
+  o Fixed makeheader to exit with zero.  Thanks Slava Filimonov
+  o Added clean to Makefile targets
+  o Made changes to dktest to support new api entry points.
+  o Adjust test cases.
+
+Changes from 0.62 to 0.63:
+
+  o Change dktest's "-t 7" option so that it works even if not signing.
+  o When using the h= tag, sign ALL instances of a header.
+  o Only remember the Sender AFTER the DK-Sig when verifying.
+  o Explicitly return DK_STAT_NOSIG if no sig was found.
+  o Explicitly finish off the headers if there is no body.
+  o Adjust test cases.
+
+Changes from 0.61 to 0.62:
+
+  o This release now supports the -01 spec.
+  o If the domain was missing from the DK-S: header, it segfaulted.
+  o The TC8 test needed to have real headers rather than /dev/null.
+  o The TC14 test returns different results in 0.61 and needed fixing.
+  o Fix the bug reported by Richard Lyons on the qmail mailing list in
+    message 120186:
+    2.  If the program is given a message to sign that's
+        already signed, it will try to verify it.
+  o dktest wasn't carrying failure status around properly.
+  o Added support for multiple canonicalizations.
+    . Have to parse the DK-Sig line earlier to get c= value.
+    . Folded EVP_SignUpdate and EVP_VerifyUpdate into EVP_DigestUpdate.
+    . Folded header and body processing into one call.
+  o Fixed support for c=simple so it works with trailing blank lines.
+  o Added support for Sender: signing domains.
+  o Added a check for a=rsa-sha1
+  o Added a check for q=dns
+  o Fixed a memory leak (wouldn't free the From: address)
+  o Added support for signing domain being a subdomain of d=.
+  o Used to be checking policy from signing domain, but spec says to
+    use d=domain.
+  o Added comments to makeheader.c and blank lines to its output.
+  o dkparselist had a subtle bug wherein it skipped a character after
+    the ';'.  Most often that was a space, so no matter until I started
+    deleting spaces for nofws testing.
+  o dkparselist now checks for a trailing key but no value.
+  o Found a memory leak.  dk->sender wasn't being freed.
+  o Added nofws support.
+  o Broke dkpolicy() out into its own subroutine.  It's now called in two
+    places: if the signature doesn't verify, and if there is no signature at
+    all.
+  o Added a copyright license.
+  o Completely changed the way headers were parsed, to handle h=.
+  o Added h= support.
+  o Added test cases.
+
+Changes from 0.60 to 0.61:
+
+  o added -DBIND_8_COMPAT for BIND9's sake.
+  o added dk_siglen to get the signature length.
+  o moved privatekey parameter from dk_sign to dk_getsig.
+
+Changes from 0.59 to 0.60:
+
+  o dns_txt.c should extract the TXT record into a PACKETSZ buffer,
+    not MAXDNAME.
+  o Fixed two error return values in dns_txt.c
+  o dknewkey should delete its temporary file.
+  o Implemented full-RFC2822 address parsing.
+  o Added test case for dk_from to dktest.c
+  o Wasn't returning flags correctly in dk_eom().
+  o Wasn't properly null-terminating the signature string.
+  o Removed error notes from 'test'.
+  o Added whole piles of RFC2822 address parsing to 'test'.
+
+Changes from 0.58 to 0.59:
+
+  o dktest strips off the path from the key filename to get the selector.
+  o dktest's -a option is now -b.
+  o dktest now rewinds its stdin.
+  o Added support for SWIG.
+  o Added dknewkey, which generates a private/public key pair and formats
+    the public key for insertion into a zone file.
+  o Wrote man pages for dktest and dknewkey in HTML.
+  o Portability fixes to Makefile, test, and dns_txt.c
+  o Fixed a bug in multiple TXT character-string handling.

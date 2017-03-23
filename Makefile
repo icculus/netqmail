@@ -812,7 +812,8 @@ dnsptr dnsip dnsmxip dnsfq hostname ipmeprint qreceipt qsmhook qbiff \
 forward preline condredirect bouncesaying except maildirmake \
 maildir2mbox maildirwatch qail elq pinq idedit install-big install \
 instcheck home home+df proc proc+df binm1 binm1+df binm2 binm2+df \
-binm3 binm3+df update_tmprsadh surblqueue dknewkey
+binm3 binm3+df update_tmprsadh surblqueue dknewkey surblfilter \
+dk-filter spawn-filter dktest qmail-dk qmail-dkim dkim
 
 load: \
 make-load warn-auto.sh systype
@@ -1116,12 +1117,12 @@ qmail-dk: \
 load qmail-dk.o triggerpull.o fmtqfn.o now.o date822fmt.o mess822_ok.o \
 subgetopt.o MakeArgs.o datetime.a seek.a ndelay.a open.a sig.a alloc.a substdio.a error.a \
 str.a case.a fs.a auto_qmail.o auto_split.o auto_uids.o fd.a wait.a \
-../libdomainkeys.a env.a getln.a control.o stralloc.a dns.lib
+libdomainkeys-0.69/libdomainkeys.a env.a getln.a control.o stralloc.a dns.lib
 	./load qmail-dk triggerpull.o fmtqfn.o now.o mess822_ok.o \
 	date822fmt.o datetime.a seek.a ndelay.a open.a sig.a \
 	subgetopt.o MakeArgs.o substdio.a error.a fs.a auto_qmail.o \
 	auto_split.o auto_uids.o \
-	fd.a wait.a ../libdomainkeys.a -lcrypto env.a control.o open.a getln.a \
+	fd.a wait.a libdomainkeys-0.69/libdomainkeys.a -lcrypto env.a control.o open.a getln.a \
 	stralloc.a alloc.a substdio.a str.a case.a `cat dns.lib`
 
 qmail-dk.0: \
@@ -1143,12 +1144,12 @@ dktest: load dktest.o scan_ulong.o dktrace.o \
 dns.o ip.o error.o ipalloc.o fmt_ulong.o \
 scan_xlong.o socket_v4mappedprefix.o socket_v6any.o \
 case_diffs.o case_diffb.o fmt_str.o stralloc.a alloc.a str.a \
-../libdomainkeys.a dns.lib
+libdomainkeys-0.69/libdomainkeys.a dns.lib
 	./load dktest scan_ulong.o dktrace.o \
 	dns.o ip.o error.o ipalloc.o fmt_ulong.o \
 	scan_xlong.o socket_v4mappedprefix.o socket_v6any.o \
 	case_diffs.o case_diffb.o fmt_str.o stralloc.a alloc.a str.a \
-	../libdomainkeys.a -lcrypto `cat dns.lib`
+	libdomainkeys-0.69/libdomainkeys.a -lcrypto `cat dns.lib`
 
 dktest.o: compile dktest.c domainkeys.h conf-domainkeys
 	./compile `grep -h -v "^#" conf-domainkeys` dktest.c
@@ -1166,12 +1167,12 @@ load qmail-dkim.o triggerpull.o fmtqfn.o now.o date822fmt.o \
 subgetopt.o MakeArgs.o dkimdns.o datetime.a seek.a ndelay.a \
 open.a sig.a alloc.a substdio.a error.a \
 str.a case.a fs.a auto_qmail.o auto_split.o auto_uids.o fd.a wait.a \
-../libdomainkeys.a env.a getln.a control.o stralloc.a dns.lib libdkim.a
+libdomainkeys-0.69/libdomainkeys.a env.a getln.a control.o stralloc.a dns.lib libdkim.a
 	g++ -o qmail-dkim qmail-dkim.o triggerpull.o dkimdns.o fmtqfn.o now.o \
 	subgetopt.o MakeArgs.o date822fmt.o datetime.a seek.a ndelay.a \
 	open.a sig.a substdio.a error.a fs.a auto_qmail.o \
 	auto_split.o auto_uids.o fd.a wait.a \
-	../libdomainkeys.a -lcrypto env.a control.o open.a getln.a \
+	libdomainkeys-0.69/libdomainkeys.a -lcrypto env.a control.o open.a getln.a \
 	stralloc.a alloc.a substdio.a str.a case.a libdkim.a `cat dns.lib`
 
 qmail-dkim.o: \

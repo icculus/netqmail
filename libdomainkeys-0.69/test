@@ -1,0 +1,444 @@
+#!/bin/sh
+
+echo ------TC1
+./dktest 2>&1 | ./expected "dktest: [-f] [-b#] [-c nofws|simple] [-v|-s selector] [-h] [-t#] [-r] [-T]"
+
+echo ------TC2
+./dktest -t 1 2>&1 | ./expected "dktest: DK_STAT_OK: Function completed successfully"
+
+echo ------TC3
+./dktest -t 2 2>&1 | ./expected "dktest: DK_STAT_UNKNOWN: unknown status"
+
+echo ------TC4
+./dktest -v -t 3 2>&1 | ./expected "dktest: DK_STAT_ARGS: Arguments are not usable."
+
+echo ------TC5
+./dktest -v -t 4 2>&1 | ./expected "dktest: DK_STAT_ARGS: Arguments are not usable."
+
+echo ------TC6
+./dktest -v -t 5 2>&1 | ./expected "dktest: DK_STAT_OK: Function completed successfully"
+
+echo ------TC7
+./dktest -s 2>&1 | sed 's!^\./!!' | ./expected "dktest: option requires an argument -- s
+dktest: [-f] [-b#] [-c nofws|simple] [-v|-s selector] [-h] [-t#] [-r] [-T]"
+
+echo ------TC8
+./dktest -s testcases/2047 <testcases/1 2>&1 | ./expected "dktest: DK_STAT_BADKEY: Unusable key, public if verifying, private if signing."
+
+echo ------TC9
+./dktest -s testcases/2048 </dev/null 2>&1 | ./expected "dktest: private key buffer isn't big enough, use a smaller private key or recompile."
+
+echo ------TC10
+./dktest -s testcases/doesnotexist </dev/null 2>&1 | ./expected "dktest: can't open private key file testcases/doesnotexist"
+
+echo ------TC11
+./dktest -v <testcases/1 2>&1 | ./expected "dktest: DK_STAT_NOSIG: No signature available in message
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: no signature"
+
+echo ------TC12
+./dktest -s dog </dev/null 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked"
+
+echo ------TC13
+(./dktest -s dog <testcases/1; cat testcases/1) | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC13-simple
+(./dktest -c simple -s dog <testcases/1; cat testcases/1) | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC13-nofws
+(./dktest -c nofws -s dog <testcases/1; cat testcases/1) | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC13-nofws1
+# nofws doesn't care if we change the whitespace.
+(./dktest -c nofws -s dog <testcases/1; cat testcases/1) | sed 's/ /  /' | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC13-empty
+(./dktest -s dog <testcases/empty; cat testcases/empty) | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC13-nobody
+(./dktest -s dog <testcases/nobody; cat testcases/nobody) | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC13-nofws-continuation
+(./dktest -c nofws -s dog <testcases/9; cat testcases/9) | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC14
+./dktest -t 6 -s dog </dev/null 2>&1 | ./expected "dktest: DK_STAT_ARGS: Arguments are not usable."
+
+echo ------TC14-1
+./dktest -t 7 -v <testcases/24 2>&1 | ./expected "crynwr.com"
+
+echo ------TC14-2
+./dktest -t 7 -v <testcases/25 2>&1 | ./expected "crynwr.com"
+
+echo ------TC14-3
+./dktest -t 11 -v <testcases/24 2>&1 | ./expected "Fnelson@crynwr.com"
+
+echo ------TC14-4
+./dktest -t 11 -v <testcases/25 2>&1 | ./expected "Snelson@crynwr.com"
+
+echo ------TC14-5
+./dktest -t 11 -v </dev/null 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+N"
+
+echo ------TC15
+./dktest -v </dev/null 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC16
+# no headers; no message body.
+echo "" | ./dktest -v 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC17
+# no headers; message body has one blank line.
+(echo "";echo "") | ./dktest -v 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC21
+./dktest -v <testcases/3 2>&1 | ./expected "dktest: DK_STAT_NOSIG: No signature available in message
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: no signature"
+
+./dktest -v <testcases/4 2>&1 | ./expected "dktest: DK_STAT_NOSIG: No signature available in message
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: no signature"
+
+echo ------TC22
+./dktest -v <testcases/5 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC23
+./dktest -v <testcases/6 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC24
+./dktest -v <testcases/7 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC25
+./dktest -v <testcases/8 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC25-1
+sed 's/PRgAf;/PRgAf;a/' <testcases/2 | ./dktest -v 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC26
+sed 's/d=crynwr.com;/d=crynwyr.com;/' <testcases/2 | ./dktest -v 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+#echo ------TC26-1
+# we can't test this until/unless we can sign with one thing and send a d= with another thing.
+#sed 's/From: nelson@crynwr.com/From: nelson@desk.crynwr.com/' <testcases/2 | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+#DomainKey-Status: good"
+
+echo ------TC26-2
+sed 's/d=crynwr.com;/d=deskcrynwr.com;/' <testcases/2 | ./dktest -v 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC26-4
+sed 's/d=crynwr.com;/d=.crynwr.com;/' <testcases/2 | ./dktest -v 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC26-7
+sed 's/d=crynwr.com;/d=crynwr.com.;/' <testcases/2 | ./dktest -v 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC27
+./dktest -v <testcases/10 2>&1 | ./expected "dktest: DK_STAT_REVOKED: Key has been revoked.
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: revoked"
+
+echo ------TC28
+./dktest -b 64 -s dog <testcases/1 2>&1 | ./expected "dktest: DK_STAT_NORESOURCE: Could not get critical resource (temporary failure)"
+./dktest -b 65 -s dog <testcases/1 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Signature: a=rsa-sha1; q=dns; c=simple;
+  s=dog; d=crynwr.com;
+  b=h97t5hOI+IfVt7ZhoVdpvzgOtro+ewYRzEzRxpsFXG7X/58FPPHckVHZR1+PRgAf;"
+
+echo ------TC31
+./dktest -v <testcases/13 2>&1 | ./expected "dktest: DK_STAT_NOKEY: No public key available (permanent failure)
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: no key"
+
+echo ------TC32
+./dktest -v <testcases/2 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC33
+./dktest -s /dev/null <testcases/1 2>&1 | ./expected "dktest: DK_STAT_BADKEY: Unusable key, public if verifying, private if signing."
+
+echo ------TC34
+./dktest -v <testcases/14 2>&1 | ./expected "dktest: DK_STAT_BADKEY: Unusable key, public if verifying, private if signing.
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad key"
+
+echo ------TC35
+./dktest -t6 -v <testcases/14 2>&1 | ./expected "dktest: DK_STAT_BADKEY: Unusable key, public if verifying, private if signing.
+flags: "
+
+echo ------TC36
+ ./dktest -t6 -v <testcases/15 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+flags: +s"
+
+echo ------TC36-1
+./dktest -t6 -v <testcases/16 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+flags: +ts"
+
+echo ------TC36-2
+./dktest -t6 -v <testcases/27 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+flags: +g"
+
+echo ------TC36-3
+./dktest -t6 -v <testcases/17 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+flags: +"
+
+echo ------TC36-4
+./dktest -t6 -v <testcases/28 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+flags: +t"
+
+echo ------TC36-5
+# test dk_end
+ ./dktest -t10 -v <testcases/15 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+flags: +"
+
+echo ------TC36-6
+# test dk_end
+./dktest -t10 -v <testcases/16 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+flags: +t"
+
+echo ------TC36-7
+# test dk_end
+./dktest -t10 -v <testcases/27 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+flags: +g"
+
+echo ------TC36-8
+# test dk_end
+./dktest -t10 -v <testcases/17 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+flags: +"
+
+echo ------TC36-9
+# test dk_end
+./dktest -t10 -v <testcases/28 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+flags: +t"
+
+echo ------TC37
+./dktest -t6 -v <testcases/2 2>&1 | ./expected "flags: +t"
+
+echo ------TC38-1
+(echo 'From: abigail@example.com';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-2
+(echo 'From: abigail@example.com ';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-3
+(echo 'From:  abigail@example.com';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-4
+(echo 'From: abigail @example.com';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-5
+(echo 'From: *@example.net';echo "") | ./dktest -t7 -s dog | ./expected "example.net"
+echo ------TC38-6
+(echo 'From: "\""@foo.bar';echo "") | ./dktest -t7 -s dog | ./expected "foo.bar"
+echo ------TC38-7
+(echo 'From: fred&barny@example.com';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-8
+(echo 'From: ---@example.com';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-9
+(echo 'From: foo-bar@example.net';echo "") | ./dktest -t7 -s dog | ./expected "example.net"
+echo ------TC38-10
+(echo 'From: "127.0.0.1"@[127.0.0.1]';echo "") | ./dktest -t7 -s dog | ./expected "[127.0.0.1]"
+echo ------TC38-11
+(echo 'From: Abigail <abigail@example.com>';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-12
+(echo 'From: Abigail<abigail@example.com>';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-13
+(echo 'From: Abigail<@a,@b,@c:abigail@example.com>';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-14
+(echo 'From: "This is a phrase"<abigail@example.com>';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-15
+(echo 'From: "Abigail "<abigail@example.com>';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-16
+(echo 'From: "Joe & J. Harvey" <example @Org>';echo "") | ./dktest -t7 -s dog | ./expected "Org"
+echo ------TC38-17
+(echo 'From: Abigail <abigail @ example.com>';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-18
+(echo 'From: Abigail made this <  abigail   @   example  .    com    >';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-19
+(echo 'From: Abigail(the bitch)@example.com';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-20
+(echo 'From: Abigail <abigail @ example . (bar) com >';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-21
+(echo 'From: Abigail < (one)  abigail (two) @(three)example . (bar) com (quz) >';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-22
+(echo 'From: Abigail (foo) (((baz)(nested) (comment)) ! ) < (one)  abigail (two) @(three)example . (bar) com (quz) >';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-23
+(echo 'From: Abigail <abigail(fo\(o)@example.com>';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-24
+(echo 'From: Abigail <abigail(fo\)o)@example.com>';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-25
+(echo 'From: (foo) abigail@example.com';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-26
+(echo 'From: abigail@example.com (foo)';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-27
+(echo 'From: "Abi\"gail" <abigail@example.com>';echo "") | ./dktest -t7 -s dog | ./expected "example.com"
+echo ------TC38-28
+(echo 'From: abigail@[example.com]';echo "") | ./dktest -t7 -s dog | ./expected "[example.com]"
+echo ------TC38-29
+(echo 'From: abigail@[exa\[ple.com]';echo "") | ./dktest -t7 -s dog | ./expected "[exa\[ple.com]"
+echo ------TC38-30
+(echo 'From: abigail@[exa\]ple.com]';echo "") | ./dktest -t7 -s dog | ./expected "[exa\]ple.com]"
+echo ------TC38-31
+(echo 'From: ":sysmail"@  Some-Group. Some-Org';echo "") | ./dktest -t7 -s dog | ./expected "Some-Group.Some-Org"
+echo ------TC38-32
+(echo 'From: Muhammed.(I am  the greatest) Ali @(the)Vegas.WBA';echo "") | ./dktest -t7 -s dog  | ./expected "Vegas.WBA"
+echo ------TC38-33
+(echo 'From: mailbox.sub1.sub2@this-domain';echo "") | ./dktest -t7 -s dog | ./expected "this-domain"
+echo ------TC38-34
+(echo 'From: sub-net.mailbox@sub-domain.domain';echo "") | ./dktest -t7 -s dog | ./expected "sub-domain.domain"
+echo ------TC38-35
+(echo 'From: name:;';echo "") | ./dktest -t7 -s dog 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+"
+echo ------TC38-36
+(echo 'From: name:   ;';echo "") | ./dktest -t7 -s dog 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+"
+echo ------TC38-37
+(echo 'From: Alfred Neuman <Neuman@BBN-TENEXA>';echo "") | ./dktest -t7 -s dog | ./expected "BBN-TENEXA"
+echo ------TC38-38
+(echo 'From: Neuman@BBN-TENEXA';echo "") | ./dktest -t7 -s dog | ./expected "BBN-TENEXA"
+echo ------TC38-39
+(echo 'From: "George, Ted" <Shared@Group.Arpanet>';echo "") | ./dktest -t7 -s dog | ./expected "Group.Arpanet"
+echo ------TC38-40
+(echo 'From: Wilt . (the  Stilt) Chamberlain@NBA.US';echo "") | ./dktest -t7 -s dog | ./expected "NBA.US"
+echo ------TC38-41
+(echo 'From: Cruisers:  Port@Portugal, Jones@SEA;';echo "") | ./dktest -t7 -s dog | ./expected "SEA"
+echo ------TC38-42
+(echo 'From: $@[]';echo "") | ./dktest -t7 -s dog | ./expected "[]"
+echo ------TC38-43
+(echo 'From: *()@[]';echo "") | ./dktest -t7 -s dog | ./expected "[]"
+
+echo ------TC39
+./dktest -t8 -s dog <testcases/1 2>&1 | ./expected "64 64"
+
+echo ------TC40
+./dktest -v <testcases/18 2>&1 | ./expected "dktest: DK_STAT_NOSIG: No signature available in message
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: no signature"
+
+echo ------TC41
+./dktest -s dog <testcases/2 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked"
+
+echo ------TC42
+./dktest -v <testcases/19 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC42-1
+sed 's/c=simple;/c=pimple;/' <testcases/2 | ./dktest -v 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC42-2
+sed 's/q=dns;/q=http;/' <testcases/2 | ./dktest -v 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC42-3
+sed 's/a=rsa-sha1;/a=sigs-0.50;/' <testcases/2 | ./dktest -v 2>&1 | ./expected "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad format"
+
+echo ------TC43
+# if we sign trailing newlines, and they're present, is that okay?
+(echo "" | cat testcases/1 - | ./dktest -s dog; cat testcases/1; echo "") | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC44
+# if we sign trailing newlines, and they're gone, is that okay?
+(echo "" | cat testcases/1 - | ./dktest -s dog; cat testcases/1) | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC45
+# if we add trailing newlines that weren't signed, is that okay?
+echo "" | (./dktest -s dog <testcases/1; cat testcases/1 -) | ./dktest -v 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC45
+# does the signature change if we add a blank line at the end of the input?
+echo "" | cat testcases/1 - | (./dktest -s dog ; cat testcases/1 -) | head -n +19 | diff -u testcases/2 -
+
+echo ------TC46
+# h= and a completely unmodified message causes no problems.
+./dktest -v <testcases/20 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC47
+# the Date: header is missing from testcases/22.
+./dktest -v <testcases/21 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad"
+
+echo ------TC48
+# reordered headers interfere with verification.
+./dktest -v <testcases/22 2>&1 | ./expected "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: bad"
+
+echo ------TC49
+# extra headers don't interfere with verification.
+./dktest -v <testcases/23 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC50
+# Sender: prior to signature is ignored.
+./dktest -v <testcases/24 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC51
+# Sender: overrides From:
+./dktest -v <testcases/25 2>&1 | ./expected "Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: good"
+
+echo ------TC52
+# check dk_headers()
+./dktest -t 9 -s dog <testcases/1 2>&1 | ./expected "Return-Path:Date:Message-ID:From:To:Subject:X-Mailer"
+./dktest -t 9 -s dog <testcases/26 2>&1 | ./expected "Return-Path:Return-Path:Date:Message-ID:From:To:Subject:X-Mailer:X-Mailer"
+./dktest -t 9 -r -s dog <testcases/26 2>&1 | ./expected "Date:Message-ID:From:To:Subject"
+
+echo ------TC53
+# check DK_STAT_to_string()
+./dktest -v -t 100 2>&1 | ./expected   "dktest: DK_STAT_OK: Function completed successfully"
+./dktest -v -t 101 2>&1 | ./expected   "dktest: DK_STAT_BADSIG: Signature was available but failed to verify against domain specified key"
+./dktest -v -t 102 2>&1 | ./expected   "dktest: DK_STAT_NOSIG: No signature available in message"
+./dktest -v -t 103 2>&1 | ./expected   "dktest: DK_STAT_NOKEY: No public key available (permanent failure)"
+./dktest -v -t 104 2>&1 | ./expected   "dktest: DK_STAT_BADKEY: Unusable key, public if verifying, private if signing."
+./dktest -v -t 105 2>&1 | ./expected   "dktest: DK_STAT_CANTVRFY: Cannot get domain key to verify signature (temporary failure)"
+./dktest -v -t 106 2>&1 | ./expected   "dktest: DK_STAT_SYNTAX: Message is not valid syntax. Signature could not be created/checked"
+./dktest -v -t 107 2>&1 | ./expected   "dktest: DK_STAT_NORESOURCE: Could not get critical resource (temporary failure)"
+./dktest -v -t 108 2>&1 | ./expected   "dktest: DK_STAT_ARGS: Arguments are not usable."
+./dktest -v -t 109 2>&1 | ./expected   "dktest: DK_STAT_REVOKED: Key has been revoked."
+./dktest -v -t 110 2>&1 | ./expected   "dktest: DK_STAT_INTERNAL: cannot call this routine in this context.  Internal error."
+./dktest -v -t 111 2>&1 | ./expected   "dktest: DK_STAT_GRANULARITY: Granularity mismatch: sender doesn't match g= option."
+./dktest -v -t 112 2>&1 | ./expected   "dktest: DK_STAT_UNKNOWN: unknown status"
+
+echo ------TC30 '(pause)'
+./dktest -v <testcases/12 2>&1 | ./expected "dktest: DK_STAT_CANTVRFY: Cannot get domain key to verify signature (temporary failure)
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Status: no key"
+

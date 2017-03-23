@@ -1,0 +1,43 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libdomainkeys", "libdomainkeys.vcproj", "{E91A2A24-ECA3-4E6F-9ABF-EA3656D29657}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB} = {E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "makeheader", "makeheader.vcproj", "{E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
+	EndGlobalSection
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug-Dll = Debug-Dll
+		Debug-Lib = Debug-Lib
+		Release-Dll = Release-Dll
+		Release-Lib = Release-Lib
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{E91A2A24-ECA3-4E6F-9ABF-EA3656D29657}.Debug-Dll.ActiveCfg = Debug-Dll|Win32
+		{E91A2A24-ECA3-4E6F-9ABF-EA3656D29657}.Debug-Dll.Build.0 = Debug-Dll|Win32
+		{E91A2A24-ECA3-4E6F-9ABF-EA3656D29657}.Debug-Lib.ActiveCfg = Debug-Lib|Win32
+		{E91A2A24-ECA3-4E6F-9ABF-EA3656D29657}.Debug-Lib.Build.0 = Debug-Lib|Win32
+		{E91A2A24-ECA3-4E6F-9ABF-EA3656D29657}.Release-Dll.ActiveCfg = Release-Dll|Win32
+		{E91A2A24-ECA3-4E6F-9ABF-EA3656D29657}.Release-Dll.Build.0 = Release-Dll|Win32
+		{E91A2A24-ECA3-4E6F-9ABF-EA3656D29657}.Release-Lib.ActiveCfg = Release-Lib|Win32
+		{E91A2A24-ECA3-4E6F-9ABF-EA3656D29657}.Release-Lib.Build.0 = Release-Lib|Win32
+		{E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB}.Debug-Dll.ActiveCfg = Release|Win32
+		{E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB}.Debug-Dll.Build.0 = Release|Win32
+		{E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB}.Debug-Lib.ActiveCfg = Release|Win32
+		{E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB}.Debug-Lib.Build.0 = Release|Win32
+		{E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB}.Release-Dll.ActiveCfg = Release|Win32
+		{E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB}.Release-Dll.Build.0 = Release|Win32
+		{E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB}.Release-Lib.ActiveCfg = Release|Win32
+		{E4C8C222-1BBE-45A0-AE7B-F6017DB9F5CB}.Release-Lib.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

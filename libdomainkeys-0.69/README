@@ -1,0 +1,66 @@
+This is libdomainkeys.  It's Copyright (c) 2004 Yahoo, Inc.
+This code incorporates intellectual property owned by
+Yahoo! and licensed pursuant to the Yahoo! DomainKeys Public License
+Agreement: http://domainkeys.sourceforge.net/license/softwarelicense1-1.html
+
+INSTALLATION
+
+ C lib build
+'make' will create libdomainkeys.a and domainkeys.h.
+
+Or else it won't.
+
+Python module build
+'make python' will build the python wrapper and shared object (_domainkeys.so)
+
+Common problems with the build:
+
+If it can't find the openssl include files, you
+might need to add a -I pointing to them to INCS variable in the Makefile.
+In addition, you may have to add an -L to the the LIBS variable to point to the
+path for the crypto lib.
+
+Problems in "dns_text" with undefined refrences. Odds are the makefile failed
+to correctly setup the dns.lib file so the easy fix is to do this:
+	echo "-lresolv" > dns.lib; make
+that should build the dktest binary.
+
+Unixware users may need to add -DUNIXWARE to the CFLAGS variable in the make file to
+make a compatable header file for cc (not gcc) on that platform.
+
+WIN32
+
+Visual Studio 2003 Project files are included and configured to create
+lib or dll in debug or release mode. OpenSSL is required and your environment
+must be configured to find the openssl include files and pre-compiled library
+from where they are. In Visual Studio, see Tools/Options/Projects/VC++
+Directories.
+
+USAGE
+
+See dktest.html and dknewkey.html.
+
+TESTING
+
+The program named 'test' will execute a number of test cases.
+
+./test
+
+It should only print the test case numbers.  If it prints anything
+else, then that test failed.
+
+ERRATA
+
+None known.
+
+DOCUMENTATION
+
+Read domainkeys.h.  If you need more information than it has,
+then I need to write more.
+
+
+Russell Nelson
+Crynwr Software
+nelson@crynwr.com
+315-323-1241
+FWD# 404529

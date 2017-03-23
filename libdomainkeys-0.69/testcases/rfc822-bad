@@ -1,0 +1,16 @@
+Just a string
+string
+(comment)
+()@example.com
+fred(&)barny@example.com
+fred\ barny@example.com
+Abigail <abi gail @ example.com>
+Abigail <abigail(fo(o)@example.com>
+Abigail <abigail(fo)o)@example.com>
+"Abi"gail" <abigail@example.com>
+abigail@[exa]ple.com]
+abigail@[exa[ple.com]
+abigail@[exaple].com]
+abigail@
+@example.com
+phrase: abigail@example.com abigail@example.com ;
