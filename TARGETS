@@ -1,3 +1,4 @@
+dktest
 auto-ccld.sh
 make-load
 find-systype
@@ -390,3 +391,43 @@ man
 setup
 check
 update_tmprsadh
+qmail-dk
+qmail-dkim
+qmail-dkim.o
+qmail-dk.o
+libdkim.a
+dkimbase.o
+dkimdns.o
+dkim.o
+dkimsign.o
+dkimverify.o
+dkim
+dkim.o
+dkim.8
+qmail-dkim.8
+qmail-dkim.0
+str_cpyb.o
+dkimfuncs.o
+MakeArgs.o
+spawn-filter spawn-filter.o qregex.o wildmat.o
+spawn-filter.8
+qmail-dk.0 spawn-filter.0
+dk-filter echo.o echo dk-filter.0 dk-filter.8
+case_startb.o
+mess822_ok.o
+scan_xlong.o
+socket_v4mappedprefix.o
+socket_v6any.o
+str_cspn.o
+surblfilter.o
+surblfilter
+surblfilter.8
+uint64.h
+surblqueue
+surblfilter.0
+base64sub.o
+qmail-dk.8
+dktest.o
+dktrace.o
+dknewkey
+dktest.8

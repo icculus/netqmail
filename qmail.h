@@ -3,6 +3,7 @@
 
 #include "substdio.h"
 
+#define CUSTOM_ERR_FD 4
 struct qmail {
   int flagerr;
   unsigned long pid;

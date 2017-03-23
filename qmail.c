@@ -23,7 +23,8 @@ struct qmail *qq;
 {
   int pim[2];
   int pie[2];
-  int pierr[2];
+  int pierr[2], errfd;
+  char *x;
 
   setup_qqargs();
 
@@ -48,7 +49,11 @@ struct qmail *qq;
       close(pierr[0]); /* we want to receive data */
       if (fd_move(0,pim[0]) == -1) _exit(120);
       if (fd_move(1,pie[0]) == -1) _exit(120);
-      if (fd_move(4,pierr[1]) == -1) _exit(120);
+      if (!(x = env_get("ERROR_FD")))
+        errfd = CUSTOM_ERR_FD;
+      else
+        scan_int(x, &errfd);
+      if (fd_move(errfd, pierr[1]) == -1) _exit(120);
       if (chdir(auto_qmail) == -1) _exit(61);
       execv(*binqqargs,binqqargs);
       _exit(120);
@@ -131,6 +136,7 @@ struct qmail *qq;
     case 115: /* compatibility */
     case 11: return "Denvelope address too long for qq (#5.1.3)";
     case 31: return "Dmail server permanently rejected message (#5.3.0)";
+    case 32: return "DPrivate key file does not exist (#5.3.5)";
     case 51: return "Zqq out of memory (#4.3.0)";
     case 52: return "Zqq timeout (#4.3.0)";
     case 53: return "Zqq write error or disk full (#4.3.0)";
@@ -150,6 +156,10 @@ struct qmail *qq;
     case 74: return "Zcommunication with mail server failed (#4.4.2)";
     case 91: /* fall through */
     case 81: return "Zqq internal bug (#4.3.0)";
+	case 82: /*- simscan exits with 82 */
+	case 88: /*- custom error */
+		 if (len > 2)
+			return errstr;
     case 120: return "Zunable to exec qq (#4.3.0)";
     default:
       if (exitcode == 82 && len > 2){
