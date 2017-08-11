@@ -919,7 +919,7 @@ int tls_verify()
     subj = X509_get_subject_name(peercert);
     n = X509_NAME_get_index_by_NID(subj, NID_pkcs9_emailAddress, -1);
     if (n >= 0) {
-      const ASN1_STRING *s = X509_NAME_get_entry(subj, n)->value;
+      const ASN1_STRING *s = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(subj, n));
       if (s) { email.len = s->length; email.s = s->data; }
     }
 

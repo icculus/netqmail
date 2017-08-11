@@ -266,8 +266,8 @@ char *append;
 {
 #ifdef TLS
   /* shouldn't talk to the client unless in an appropriate state */
-  int state = ssl ? ssl->state : SSL_ST_BEFORE;
-  if (state & SSL_ST_OK || (!smtps && state & SSL_ST_BEFORE))
+  const OSSL_HANDSHAKE_STATE state = ssl ? SSL_get_state(ssl) : TLS_ST_BEFORE;
+  if (state & TLS_ST_OK || (!smtps && state & TLS_ST_BEFORE))
 #endif
   substdio_putsflush(&smtpto,"QUIT\r\n");
   /* waiting for remote side is just too ridiculous */
@@ -493,7 +493,7 @@ int tls_init()
       X509_NAME *subj = X509_get_subject_name(peercert);
       i = X509_NAME_get_index_by_NID(subj, NID_commonName, -1);
       if (i >= 0) {
-        const ASN1_STRING *s = X509_NAME_get_entry(subj, i)->value;
+        const ASN1_STRING *s = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(subj, i));
         if (s) { peer.len = s->length; peer.s = s->data; }
       }
       if (peer.len <= 0) {

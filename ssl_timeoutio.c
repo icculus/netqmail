@@ -74,10 +74,10 @@ int ssl_timeoutrehandshake(int t, int rfd, int wfd, SSL *ssl)
 
   SSL_renegotiate(ssl);
   r = ssl_timeoutio(SSL_do_handshake, t, rfd, wfd, ssl, NULL, 0);
-  if (r <= 0 || ssl->type == SSL_ST_CONNECT) return r;
+  if (r <= 0 || SSL_get_state(ssl) == SSL_ST_CONNECT) return r;
 
   /* this is for the server only */
-  ssl->state = SSL_ST_ACCEPT;
+  SSL_set_accept_state(ssl);
   return ssl_timeoutio(SSL_do_handshake, t, rfd, wfd, ssl, NULL, 0);
 }
 

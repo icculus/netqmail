@@ -61,23 +61,28 @@ CDKIMSign::CDKIMSign()
 {
 	m_EmptyLineCount = 0;
 	m_pfnHdrCallback = NULL;
-	EVP_SignInit(&m_allman_sha1ctx, EVP_sha1());
-	EVP_SignInit(&m_Hdr_ietf_sha1ctx, EVP_sha1());
-	EVP_DigestInit(&m_Bdy_ietf_sha1ctx, EVP_sha1());
+	m_allman_sha1ctx = EVP_MD_CTX_new();
+	EVP_SignInit(m_allman_sha1ctx, EVP_sha1());
+	m_Hdr_ietf_sha1ctx = EVP_MD_CTX_new();
+	EVP_SignInit(m_Hdr_ietf_sha1ctx, EVP_sha1());
+	m_Bdy_ietf_sha1ctx = EVP_MD_CTX_new();
+	EVP_DigestInit(m_Bdy_ietf_sha1ctx, EVP_sha1());
 #ifdef HAVE_EVP_SHA256
-	EVP_SignInit(&m_Hdr_ietf_sha256ctx, EVP_sha256());
-	EVP_DigestInit(&m_Bdy_ietf_sha256ctx, EVP_sha256());
+	m_Hdr_ietf_sha256ctx = EVP_MD_CTX_new();
+	EVP_SignInit(m_Hdr_ietf_sha256ctx, EVP_sha256());
+	m_Bdy_ietf_sha256ctx = EVP_MD_CTX_new();
+	EVP_DigestInit(m_Bdy_ietf_sha256ctx, EVP_sha256());
 #endif
 }
 
 CDKIMSign::~CDKIMSign()
 {
-	EVP_MD_CTX_cleanup(&m_allman_sha1ctx);
-	EVP_MD_CTX_cleanup(&m_Hdr_ietf_sha1ctx);
-	EVP_MD_CTX_cleanup(&m_Bdy_ietf_sha1ctx);
+	EVP_MD_CTX_free(m_allman_sha1ctx);
+	EVP_MD_CTX_free(m_Hdr_ietf_sha1ctx);
+	EVP_MD_CTX_free(m_Bdy_ietf_sha1ctx);
 #ifdef HAVE_EVP_SHA256
-	EVP_MD_CTX_cleanup(&m_Hdr_ietf_sha256ctx);
-	EVP_MD_CTX_cleanup(&m_Bdy_ietf_sha256ctx);
+	EVP_MD_CTX_free(m_Hdr_ietf_sha256ctx);
+	EVP_MD_CTX_free(m_Bdy_ietf_sha256ctx);
 #endif
 }
 
@@ -129,32 +134,32 @@ CDKIMSign::Hash(const char *szBuffer, int nBufLength, bool bHdr, bool bAllmanOnl
 {
 	if (bAllmanOnly) {
 		if (m_nIncludeBodyHash & DKIM_BODYHASH_ALLMAN_1)
-			EVP_SignUpdate(&m_allman_sha1ctx, szBuffer, nBufLength);
+			EVP_SignUpdate(m_allman_sha1ctx, szBuffer, nBufLength);
 	} else {
 		if (m_nIncludeBodyHash < DKIM_BODYHASH_IETF_1)
-			EVP_SignUpdate(&m_allman_sha1ctx, szBuffer, nBufLength);
+			EVP_SignUpdate(m_allman_sha1ctx, szBuffer, nBufLength);
 		else
 		if (m_nIncludeBodyHash & DKIM_BODYHASH_IETF_1) {
 			if (m_nIncludeBodyHash & DKIM_BODYHASH_ALLMAN_1)
-				EVP_SignUpdate(&m_allman_sha1ctx, szBuffer, nBufLength);
+				EVP_SignUpdate(m_allman_sha1ctx, szBuffer, nBufLength);
 #ifdef HAVE_EVP_SHA256
 			if (m_nHash & DKIM_HASH_SHA256) {
 				if (bHdr)
-					EVP_SignUpdate(&m_Hdr_ietf_sha256ctx, szBuffer, nBufLength);
+					EVP_SignUpdate(m_Hdr_ietf_sha256ctx, szBuffer, nBufLength);
 				else
-					EVP_DigestUpdate(&m_Bdy_ietf_sha256ctx, szBuffer, nBufLength);
+					EVP_DigestUpdate(m_Bdy_ietf_sha256ctx, szBuffer, nBufLength);
 			}
 			if (m_nHash != DKIM_HASH_SHA256) {
 				if (bHdr)
-					EVP_SignUpdate(&m_Hdr_ietf_sha1ctx, szBuffer, nBufLength);
+					EVP_SignUpdate(m_Hdr_ietf_sha1ctx, szBuffer, nBufLength);
 				else
-					EVP_DigestUpdate(&m_Bdy_ietf_sha1ctx, szBuffer, nBufLength);
+					EVP_DigestUpdate(m_Bdy_ietf_sha1ctx, szBuffer, nBufLength);
 			}
 #else
 			if (bHdr)
-				EVP_SignUpdate(&m_Hdr_ietf_sha1ctx, szBuffer, nBufLength);
+				EVP_SignUpdate(m_Hdr_ietf_sha1ctx, szBuffer, nBufLength);
 			else
-				EVP_DigestUpdate(&m_Bdy_ietf_sha1ctx, szBuffer, nBufLength);
+				EVP_DigestUpdate(m_Bdy_ietf_sha1ctx, szBuffer, nBufLength);
 #endif
 		}
 	}
@@ -753,9 +758,9 @@ int CDKIMSign::ConstructSignature(char *szPrivKey, bool bUseIetfBodyHash, bool b
 		unsigned char Hash[EVP_MAX_MD_SIZE];
 		unsigned int nHashLen = 0;
 #ifdef HAVE_EVP_SHA256
-		EVP_DigestFinal(bUseSha256 ? &m_Bdy_ietf_sha256ctx : &m_Bdy_ietf_sha1ctx, Hash, &nHashLen);
+		EVP_DigestFinal(bUseSha256 ? m_Bdy_ietf_sha256ctx : m_Bdy_ietf_sha1ctx, Hash, &nHashLen);
 #else
-		EVP_DigestFinal(&m_Bdy_ietf_sha1ctx, Hash, &nHashLen);
+		EVP_DigestFinal(m_Bdy_ietf_sha1ctx, Hash, &nHashLen);
 #endif
 		bio = BIO_new(BIO_s_mem());
 		if (!bio) {
@@ -804,12 +809,12 @@ int CDKIMSign::ConstructSignature(char *szPrivKey, bool bUseIetfBodyHash, bool b
 		sTemp = sSignedSig.c_str();
 	if (bUseIetfBodyHash) {
 #ifdef HAVE_EVP_SHA256
-		EVP_SignUpdate(bUseSha256 ? &m_Hdr_ietf_sha256ctx : &m_Hdr_ietf_sha1ctx, sTemp.c_str(), sTemp.size());
+		EVP_SignUpdate(bUseSha256 ? m_Hdr_ietf_sha256ctx : m_Hdr_ietf_sha1ctx, sTemp.c_str(), sTemp.size());
 #else
-		EVP_SignUpdate(&m_Hdr_ietf_sha1ctx, sTemp.c_str(), sTemp.size());
+		EVP_SignUpdate(m_Hdr_ietf_sha1ctx, sTemp.c_str(), sTemp.size());
 #endif
 	} else
-		EVP_SignUpdate(&m_allman_sha1ctx, sTemp.c_str(), sTemp.size());
+		EVP_SignUpdate(m_allman_sha1ctx, sTemp.c_str(), sTemp.size());
 	if (!(bio = BIO_new_mem_buf(szPrivKey, -1)))
 		return DKIM_OUT_OF_MEMORY;
 	pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
@@ -826,12 +831,12 @@ int CDKIMSign::ConstructSignature(char *szPrivKey, bool bUseIetfBodyHash, bool b
 	}
 	if (bUseIetfBodyHash) {
 #ifdef HAVE_EVP_SHA256
-		nSignRet = EVP_SignFinal(bUseSha256 ? &m_Hdr_ietf_sha256ctx : &m_Hdr_ietf_sha1ctx, sig, &siglen, pkey);
+		nSignRet = EVP_SignFinal(bUseSha256 ? m_Hdr_ietf_sha256ctx : m_Hdr_ietf_sha1ctx, sig, &siglen, pkey);
 #else
-		nSignRet = EVP_SignFinal(&m_Hdr_ietf_sha1ctx, sig, &siglen, pkey);
+		nSignRet = EVP_SignFinal(m_Hdr_ietf_sha1ctx, sig, &siglen, pkey);
 #endif
 	} else
-		nSignRet = EVP_SignFinal(&m_allman_sha1ctx, sig, &siglen, pkey);
+		nSignRet = EVP_SignFinal(m_allman_sha1ctx, sig, &siglen, pkey);
 	EVP_PKEY_free(pkey);
 	if (!nSignRet) {
 		OPENSSL_free(sig);

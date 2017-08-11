@@ -73,8 +73,8 @@ SignatureInfo::SignatureInfo(bool s)
 {
 	VerifiedBodyCount = 0;
 	UnverifiedBodyCount = 0;
-	EVP_MD_CTX_init(&m_Hdr_ctx);
-	EVP_MD_CTX_init(&m_Bdy_ctx);
+	m_Hdr_ctx = EVP_MD_CTX_new();
+	m_Bdy_ctx = EVP_MD_CTX_new();
 	m_pSelector = NULL;
 	Status = DKIM_SUCCESS;
 	m_nHash = 0;
@@ -84,8 +84,12 @@ SignatureInfo::SignatureInfo(bool s)
 
 SignatureInfo::~SignatureInfo()
 {
-	EVP_MD_CTX_cleanup(&m_Hdr_ctx);
-	EVP_MD_CTX_cleanup(&m_Bdy_ctx);
+#if 0 // !!! FIXME: these are bogus-freeing. Track that down.
+	if (m_Hdr_ctx)
+		EVP_MD_CTX_free(m_Hdr_ctx);
+	if (m_Bdy_ctx)
+		EVP_MD_CTX_free(m_Bdy_ctx);
+#endif
 }
 
 inline          bool
@@ -430,7 +434,7 @@ CDKIMVerify::GetResults(int *sCount, int *sSize)
 				// check the body hash
 				unsigned char   md[EVP_MAX_MD_SIZE];
 				unsigned        len = 0;
-				int             res = EVP_DigestFinal(&i->m_Bdy_ctx, md, &len);
+				int             res = EVP_DigestFinal(i->m_Bdy_ctx, md, &len);
 				if (!res || len != i->BodyHashData.length() || memcmp(i->BodyHashData.data(), md, len) != 0) {
 					// body hash mismatch
 					// if the selector is in testing mode...
@@ -466,7 +470,7 @@ CDKIMVerify::GetResults(int *sCount, int *sSize)
 			}
 			i->Hash(sSignedSig.c_str(), sSignedSig.length());
 			assert(i->m_pSelector != NULL);
-			int             res = EVP_VerifyFinal(&i->m_Hdr_ctx, (unsigned char *) i->SignatureData.data(),
+			int             res = EVP_VerifyFinal(i->m_Hdr_ctx, (unsigned char *) i->SignatureData.data(),
 							i->SignatureData.length(), i->m_pSelector->PublicKey);
 			if (res == 1) {
 				if (i->UnverifiedBodyCount == 0)
@@ -552,9 +556,9 @@ SignatureInfo::Hash(const char *szBuffer, unsigned nBufLength, bool IsBody)
 		}
 	}
 	if (IsBody && !BodyHashData.empty()) {
-		EVP_DigestUpdate(&m_Bdy_ctx, szBuffer, nBufLength);
+		EVP_DigestUpdate(m_Bdy_ctx, szBuffer, nBufLength);
 	} else {
-		EVP_VerifyUpdate(&m_Hdr_ctx, szBuffer, nBufLength);
+		EVP_VerifyUpdate(m_Hdr_ctx, szBuffer, nBufLength);
 	}
 	if (m_SaveCanonicalizedData) {
 		CanonicalizedData.append(szBuffer, nBufLength);
@@ -616,15 +620,15 @@ CDKIMVerify::ProcessHeaders(void)
 		// initialize the hashes
 #ifdef HAVE_EVP_SHA256
 		if (sig.m_nHash == DKIM_HASH_SHA256) {
-			EVP_VerifyInit(&sig.m_Hdr_ctx, EVP_sha256());
-			EVP_DigestInit(&sig.m_Bdy_ctx, EVP_sha256());
+			EVP_VerifyInit(sig.m_Hdr_ctx, EVP_sha256());
+			EVP_DigestInit(sig.m_Bdy_ctx, EVP_sha256());
 		} else {
-			EVP_VerifyInit(&sig.m_Hdr_ctx, EVP_sha1());
-			EVP_DigestInit(&sig.m_Bdy_ctx, EVP_sha1());
+			EVP_VerifyInit(sig.m_Hdr_ctx, EVP_sha1());
+			EVP_DigestInit(sig.m_Bdy_ctx, EVP_sha1());
 		}
 #else
-		EVP_VerifyInit(&sig.m_Hdr_ctx, EVP_sha1());
-		EVP_DigestInit(&sig.m_Bdy_ctx, EVP_sha1());
+		EVP_VerifyInit(sig.m_Hdr_ctx, EVP_sha1());
+		EVP_DigestInit(sig.m_Bdy_ctx, EVP_sha1());
 #endif
 		// compute the hash of the header
 		vector < list < string >::reverse_iterator > used;
@@ -1100,7 +1104,8 @@ SelectorInfo::Parse(char *Buffer)
 		if (pkey == NULL)
 			return DKIM_SELECTOR_PUBLIC_KEY_INVALID;
 		// make sure public key is the correct type (we only support rsa)
-		if (pkey->type == EVP_PKEY_RSA || pkey->type == EVP_PKEY_RSA2) {
+		const int pkeytype = EVP_PKEY_base_id(pkey);
+		if (pkeytype == EVP_PKEY_RSA || pkeytype == EVP_PKEY_RSA2) {
 			PublicKey = pkey;
 		} else {
 			EVP_PKEY_free(pkey);

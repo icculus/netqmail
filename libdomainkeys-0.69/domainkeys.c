@@ -120,7 +120,7 @@ typedef struct
 {
 /* STARTPRIV */
   int dkmarker;     /* in case somebody casts in */
-  EVP_MD_CTX mdctx;   /* the hash */
+  EVP_MD_CTX *mdctx;   /* the hash */
   int signing;      /* our current signing/verifying state */
   int in_headers;   /* true if we're still processing headers */
   char *header;     /* points to a malloc'ed block for header. */
@@ -256,12 +256,17 @@ void dk_shutdown(DK_LIB * dklib)
    {
       DK_MFREE(dklib);
    }
-   CRYPTO_cleanup_all_ex_data();
+//   CRYPTO_cleanup_all_ex_data();
 }
 
 /* start a new header */
 static DK_STAT dkinit_new_header(DK *dk)
 {
+  dk->mdctx = EVP_MD_CTX_new();
+  if (!dk->mdctx)
+  {
+    return DKERR(DK_STAT_NORESOURCE);
+  }
   dk->headermax = DK_BLOCK;
   dk->header = DK_MALLOC(DK_BLOCK);
   if (!dk->header)
@@ -503,7 +508,7 @@ DK *dk_sign(DK_LIB *dklib, DK_STAT *statp, int canon)
     return NULL;
   }
   dk->canon = canon; /* TC13-simple, TC13-nofws */
-  EVP_SignInit(&dk->mdctx, dklib->md);
+  EVP_SignInit(dk->mdctx, dklib->md);
 
   if (statp)
   {
@@ -541,7 +546,7 @@ DK *dk_verify(DK_LIB *dklib, DK_STAT *statp)
     }
     return NULL;
   }
-  EVP_VerifyInit(&dk->mdctx, dklib->md);
+  EVP_VerifyInit(dk->mdctx, dklib->md);
 
   if (statp)
   {
@@ -928,14 +933,14 @@ static void dkhash(DK *dk, const unsigned char *ptr)
     {
 
 #ifndef DK_HASH_BUFF
-      EVP_DigestUpdate(&dk->mdctx, "\r\n", 2);
+      EVP_DigestUpdate(dk->mdctx, "\r\n", 2);
 #else
       /* buffer hack */
       dk->hash_buff[dk->hash_buff_len++] = '\r';
       dk->hash_buff[dk->hash_buff_len++] = '\n';
       if (dk->hash_buff_len >= (DK_BLOCK - 1))
       {
-        EVP_DigestUpdate(&dk->mdctx, dk->hash_buff, dk->hash_buff_len);
+        EVP_DigestUpdate(dk->mdctx, dk->hash_buff, dk->hash_buff_len);
         dk->hash_buff_len = 0;
       }
       /* buffer hack */
@@ -955,13 +960,13 @@ static void dkhash(DK *dk, const unsigned char *ptr)
       if (dk->canon == DK_CANON_SIMPLE)//if nofws we ignore \r
       {
 #ifndef DK_HASH_BUFF
-        EVP_DigestUpdate(&dk->mdctx, "\r", 1);
+        EVP_DigestUpdate(dk->mdctx, "\r", 1);
 #else
         /* buffer hack */
         dk->hash_buff[dk->hash_buff_len++] = '\r';
         if (dk->hash_buff_len >= (DK_BLOCK - 1))
         {
-          EVP_DigestUpdate(&dk->mdctx, dk->hash_buff, dk->hash_buff_len);
+          EVP_DigestUpdate(dk->mdctx, dk->hash_buff, dk->hash_buff_len);
           dk->hash_buff_len = 0;
         }
         /* buffer hack */
@@ -977,13 +982,13 @@ static void dkhash(DK *dk, const unsigned char *ptr)
       dk->state --;
     }
 #ifndef DK_HASH_BUFF
-    EVP_DigestUpdate(&dk->mdctx, ptr, 1);
+    EVP_DigestUpdate(dk->mdctx, ptr, 1);
 #else
     /* buffer hack */
     dk->hash_buff[dk->hash_buff_len++] = *ptr;
     if (dk->hash_buff_len >= (DK_BLOCK - 1))
     {
-      EVP_DigestUpdate(&dk->mdctx, dk->hash_buff, dk->hash_buff_len);
+      EVP_DigestUpdate(dk->mdctx, dk->hash_buff, dk->hash_buff_len);
       dk->hash_buff_len = 0;
     }
     /* buffer hack */
@@ -1746,10 +1751,10 @@ DK_STAT dk_end(DK *dk, DK_FLAGS *dkf)
     //clean out hash buffer
     dk->hash_buff[dk->hash_buff_len++] = '\r';
     dk->hash_buff[dk->hash_buff_len++] = '\n';
-    EVP_DigestUpdate(&dk->mdctx, dk->hash_buff, dk->hash_buff_len);
+    EVP_DigestUpdate(dk->mdctx, dk->hash_buff, dk->hash_buff_len);
     dk->hash_buff_len = 0;
 #else
-    EVP_DigestUpdate(&dk->mdctx, "\r\n", 2);
+    EVP_DigestUpdate(dk->mdctx, "\r\n", 2);
 #endif
 #ifdef DK_DEBUG
     fprintf(stderr,"\r\n");
@@ -1949,7 +1954,7 @@ DK_STAT dk_end(DK *dk, DK_FLAGS *dkf)
       }
 
       /* using that key, verify that the digest is properly signed */
-      i = EVP_VerifyFinal(&dk->mdctx, md_value, md_len, publickey);
+      i = EVP_VerifyFinal(dk->mdctx, md_value, md_len, publickey);
 
       if (i > 0)
       {
@@ -2058,7 +2063,7 @@ DK_STAT dk_getsig(DK *dk, void *privatekey, unsigned char buf[], size_t len)
 
       siglen = EVP_PKEY_size(pkey);
       sig = (unsigned char*) OPENSSL_malloc(siglen);
-      EVP_SignFinal(&dk->mdctx, sig, &siglen, pkey);
+      EVP_SignFinal(dk->mdctx, sig, &siglen, pkey);
       EVP_PKEY_free(pkey);
 
       bio = BIO_new(BIO_s_mem());
@@ -2152,7 +2157,7 @@ DK_STAT dk_free(DK *dk, int doClearErrState)
 #ifdef DK_HASH_BUFF
   DK_MFREE(dk->hash_buff);
 #endif
-  EVP_MD_CTX_cleanup(&dk->mdctx);
+  EVP_MD_CTX_free(dk->mdctx);
   DK_MFREE(dk->header);   /* alloc'ing dk->header is not optional. */
   dk->dkmarker = ~DKMARK;
   DK_MFREE(dk);
