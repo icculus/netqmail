@@ -2406,10 +2406,10 @@ DKIMSRCS = dkimfuncs.cpp dkimbase.cpp
 DKIMOBJS = $(DKIMSRCS:.cpp=.o)
 
 dkimverify.o: dkim.h dkimdns.h dkimverify.h dkimverify.cpp
-	g++ -DHAVE_EVP_SHA256 -c dkimverify.cpp
+	g++ -fPIC -DHAVE_EVP_SHA256 -c dkimverify.cpp
 
 dkimsign.o: dkim.h dkimsign.h dkimsign.cpp
-	g++ -DHAVE_EVP_SHA256 -c dkimsign.cpp
+	g++ -fPIC -DHAVE_EVP_SHA256 -c dkimsign.cpp
 
 dkim : libdkim.a dkim.o dkimdns.o
 	g++ -g -o dkim $(LFLAGS) -L. dkim.o dkimdns.o libdkim.a `cat dns.lib` -lcrypto
