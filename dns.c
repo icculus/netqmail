@@ -5,8 +5,10 @@
 #include <arpa/nameser.h>
 #include <resolv.h>
 #include <errno.h>
-extern int res_query();
-extern int res_search();
+extern int res_query(const char *dname, int class, int type,
+                  unsigned char *answer, int anslen);
+extern int res_search(const char *dname, int class, int type,
+                  unsigned char *answer, int anslen);
 #include "ip.h"
 #include "ipalloc.h"
 #include "fmt.h"
@@ -33,7 +35,8 @@ unsigned short pref;
 
 static stralloc glue = {0};
 
-static int (*lookup)() = res_query;
+static int (*lookup)(const char *dname, int class, int type,
+                  unsigned char *answer, int anslen) = res_query;
 
 static int resolve(domain,type)
 stralloc *domain;
